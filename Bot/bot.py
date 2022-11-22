@@ -4,7 +4,7 @@ from discord.ext import commands
 import matplotlib.pyplot as plt
 import numpy as np
 
-token = "NTE4NzA2NjY0MzI1NTEzMjI4.GQywI5.-7YDJMvi41jiZ4ffMRv_MZ66LeXJOJxIWi7oqs"
+token = ""
 
 bot = commands.Bot(intents = discord.Intents.default(),
                    command_prefix = "!")
