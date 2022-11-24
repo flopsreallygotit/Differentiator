@@ -51,9 +51,10 @@ ISERROR insertRootAsNode (tree *Tree, node *Node);
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /// @brief Pushes leaf to node.
+/// @param Tree Pointer to tree.
 /// @param Node Pointer to node.
 /// @param Leaf Pointer to leaf.
-ISERROR pushLeafToNode (node *Node, node *Leaf);
+ISERROR insertLeafToNode (tree *Tree, node *Node, node *Leaf);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

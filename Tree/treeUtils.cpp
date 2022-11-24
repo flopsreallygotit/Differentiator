@@ -30,7 +30,7 @@ tree *treeConstructorFunction (const char *filename, const int line)
                NULL);
 
     Tree->size = 0;
-    Tree->root = nodeConstructor(UNKNOWN, {});
+    Tree->root = nodeConstructor(UNKNOWN, {0});
 
     CHECKERROR(Tree->root != NULL, NULL);
 
@@ -116,7 +116,7 @@ ISERROR insertRootAsNode (tree *Tree, node *Root)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ISERROR pushLeafToNode (tree *Tree, node *Node, node *Leaf)
+ISERROR insertLeafToNode (tree *Tree, node *Node, node *Leaf)
 {
     CHECKERROR(Tree != NULL && 
                "You are trying to push in nullpointer.", 
@@ -155,15 +155,15 @@ static void elementOutput (const TYPE type, const data_t element,
     switch(type)
     {
         case VALUE:
-            fprintf(file, "Val: %lg", element.value);
+            fprintf(file, "%lg", element.value);
             break;
 
         case VARIABLE:
-            fprintf(file, "Var: %c", element.variable);
+            fprintf(file, "%c", element.variable);
             break;
 
         case OPERATION:
-            fprintf(file, "Op: %c",  element.operation);
+            fprintf(file, "%c",  element.operation);
             break;
 
         default:
