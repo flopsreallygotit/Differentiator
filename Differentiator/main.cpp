@@ -4,41 +4,33 @@
 
 int main (const int argc, const char *argv[])
 {
-    // const char *filename = simpleCommandLineParser(argc, argv);
+    const char *filename = simpleCommandLineParser(argc, argv);
 
-    // CHECKERROR(filename != NULL &&
-    //            "Error in filename parsing.", 
-    //            -1);
+    CHECKERROR(filename != NULL &&
+               "Error in filename parsing.", 
+               -1);
 
-    // tree *Tree = parseFile(filename);
+    FILE *output = fopen("Differentiator.htm", "w");
 
-    tree *Tree = treeConstructor;
+    tree *Tree = parseFile(filename);
+    CHECKERROR(Tree != NULL &&
+               "Error in file parsing.", 
+               -1);
 
-    insertRoot(Tree, OPERATION, {.operation = MUL});
+    treeDump(Tree, "Dump of readden tree.", output);
 
-    node *leftNode  = nodeConstructor(OPERATION, {.operation = ADD});
-    insertLeafToNode(Tree, Tree->root, leftNode);
-
-    node *rightNode = nodeConstructor(OPERATION, {.operation = ADD});
-    insertLeafToNode(Tree, Tree->root, rightNode);
-
-    node *leftLeftNode  = nodeConstructor(VARIABLE, {.variable = 'x'});
-    node *leftRightNode = nodeConstructor(VALUE,    {.value    =  2 });
-    insertLeafToNode(Tree, Tree->root->left, leftLeftNode);
-    insertLeafToNode(Tree, Tree->root->left, leftRightNode);
-
-    node *rightLeftNode  = nodeConstructor(VARIABLE, {.variable = 'x'});
-    node *rightRightNode = nodeConstructor(VALUE,    {.value    =  3 });
-    insertLeafToNode(Tree, Tree->root->right, rightLeftNode);
-    insertLeafToNode(Tree, Tree->root->right, rightRightNode);
-
-    inorderPrintTree(Tree);
-
-    FILE *output = fopen("output.htm", "w");
-    treeDump(Tree, "Dump", output);
-    fclose(output);
+    tree *Diff = differentiateTree(Tree);
+    CHECKERROR(Diff != NULL &&
+               "Error in tree differentiation.", 
+               -1);
 
     treeDestructor(Tree);
+
+    treeDump(Diff, "Dump of differentiated tree.", output);
+
+    treeDestructor(Diff);
+
+    fclose(output);
 
     return 0;
 }

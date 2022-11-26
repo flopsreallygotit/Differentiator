@@ -7,10 +7,10 @@ CXXFLAGS ?= -Wall -Wextra -ggdb3
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Configure sources you need to compile.
-SOURCES = Universal/universalUtils.cpp Tree/treeUtils.cpp Differentiator/differentiatorUtils.cpp Differentiator/main.cpp
+SOURCES = Universal/universalUtils.cpp Tree/treeUtils.cpp Differentiator/createTreeFromFile.cpp Differentiator/differentiatorUtils.cpp Differentiator/main.cpp
 
 # Configure directory flags.
-DIRFLAGS = -ITree -IUniversal -IDifferentiator
+DIRFLAGS = -ITree -IUniversal -IDifferentiator -IDSL
 
 # Configure dependence headers.
 HEADERS  = Tree/treeUtils.h Tree/treeConfig.h Universal/universalUtils.h Differentiator/differentiatorUtils.h

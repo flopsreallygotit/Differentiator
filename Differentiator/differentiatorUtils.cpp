@@ -1,142 +1,51 @@
-#include <ctype.h>
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 #include "differentiatorUtils.h"
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-const char *simpleCommandLineParser (const int argc, const char *argv[])
+static node *differenciateSubtree (node *Node, size_t *newSize)
 {
-    CHECKERROR(argv != NULL &&
-               "Argv pointer can't be NULL.",
-               NULL);
+    node *newNode = NULL;
 
-    CHECKERROR(argc != 1 &&
-               "You haven't entered file name."
-               "Example: ./main base.txt", 
-               NULL);
-
-    CHECKWARNING(argc == 2 &&
-                 "You have entered more than two arguments."
-                 "Only second argument is taken as the filename.");
-
-    return argv[1];
-}
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-#define PROCESS_OPERATION_CASE(symbol, operation_data) \
-    case symbol:                                       \
-        Node->type = OPERATION;                        \
-        Node->data = {.operation = operation_data};    \
-        break
-
-static ISERROR fillNode (node *Node, FILE *file)
-{
-    char symbol = 0;
-
-    fscanf(file, " %c", &symbol);
-
-    switch (symbol)
+    switch(Node->type)
     {
-        PROCESS_OPERATION_CASE('+', ADD);
-        PROCESS_OPERATION_CASE('-', SUB);
-        PROCESS_OPERATION_CASE('*', MUL);
-        PROCESS_OPERATION_CASE('/', DIV);
-        PROCESS_OPERATION_CASE('^', POW);
-        
+        case OPERATION:
+            
+            break;
+
+        case VALUE:
+            break;
+
+        case VARIABLE:
+            break;
+
         default:
+            PUTERROR("Unmatched type of node.");
+            return NULL;
             break;
     }
 
-    if (Node->type == UNKNOWN && isalpha(symbol))
-    {
-        Node->type = VARIABLE;
-        Node->data = {.variable = symbol};
-    }
-
-    else if (Node->type == UNKNOWN)
-    {
-        ungetc(symbol, file);
-
-        double number = 0;
-        int count = fscanf(file, " %lg", &number);
-
-        if (count != 0)
-        {
-            Node->type = VALUE;
-            Node->data = {.value = number};
-        }
-    }
-
-    if (Node->type == UNKNOWN)
-        return ERROR;
-
-    return NOTERROR;
+    return newNode;
 }
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tree *differentiateTree (tree *Tree)
+{
+    CHECKERROR(Tree != NULL &&
+               "Can't differentiate NULL.",
+               NULL);
 
-// static node *nodeReadFromFile (node *Node, FILE *file)
-// {   
-//     char firstSymbol = 0;
-//     fscanf(file, " %c", &firstSymbol);
-    
-//     if (firstSymbol == '(')
-//     {
-//         node *Node = nodeConstructor(UNKNOWN, {0});
+    tree *Diff = treeConstructor;
 
-//         nodeReadFromFile(Node->left,  file);
+    CHECKERROR(Diff == NULL && 
+               "Can't create new tree", 
+               NULL);
 
-//         fillNode(Node, file);
+    size_t diffSize = 0;
+    node *diffRoot  = differenciateSubtree(Tree->root, &diffSize);
 
-//         printf("TYPE %d", Node->type);
+    Diff->root = diffRoot;
+    Diff->size = diffSize;
 
-//         char lastSymbol = 0;
-//         scanf(" %c", &lastSymbol);
-
-//         ungetc(lastSymbol, file);
-
-//         if (lastSymbol == ')')
-//             return Node;
-
-//         nodeReadFromFile(Node->right, file);
-//     }
-
-//     if (firstSymbol != ')')
-//     {
-//         fillNode(Node, file);
-
-//         return Node;
-//     }
-  
-//     return NULL;
-// }
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-// tree *parseFile (const char *filename)
-// {
-//     CHECKERROR(filename != NULL &&
-//                "Can't open file with nullpointer to filename.",
-//                NULL);
-
-//     FILE *file = fopen(filename, "r");
-
-//     CHECKERROR(file != NULL &&
-//                "Can't open file.",
-//                NULL);
-
-//     tree *Tree = treeConstructor;
-
-//     CHECKERROR(Tree != NULL &&
-//                "Can't create tree.",
-//                NULL);
-
-//     fclose(file);
-
-//     return Tree;
-// }
+    return Diff;
+}
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

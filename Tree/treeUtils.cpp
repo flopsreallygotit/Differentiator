@@ -30,9 +30,8 @@ tree *treeConstructorFunction (const char *filename, const int line)
                NULL);
 
     Tree->size = 0;
-    Tree->root = nodeConstructor(UNKNOWN, {0});
 
-    CHECKERROR(Tree->root != NULL, NULL);
+    // Reader will made root itself.
 
     #ifdef BIRTHINFO
 
@@ -146,12 +145,16 @@ ISERROR insertLeafToNode (tree *Tree, node *Node, node *Leaf)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static void elementOutput (const TYPE type, const data_t element, 
-                           bool putQuotes, FILE *file)
+static void dataOutput (const TYPE type, const data_t element, 
+                        bool putQuotes, FILE *file)
 {
     if (putQuotes)
         putc('"', file);
 
+    #define DEFINE_OPERATION(Operation, String, ...) \
+        if (element.operation == Operation)          \
+            fprintf(file, "%s", String);
+        
     switch(type)
     {
         case VALUE:
@@ -163,13 +166,15 @@ static void elementOutput (const TYPE type, const data_t element,
             break;
 
         case OPERATION:
-            fprintf(file, "%c",  element.operation);
+            #include "operations.h"
             break;
 
         default:
             fprintf(file, "Err");
             break;
     }
+
+    #undef DEFINE_OPERATION
 
     if (putQuotes)
         putc('"', file);
@@ -186,7 +191,7 @@ static void recursiveInorderPrintTree (const node *Node, FILE *file)
     if (Node->left  != NULL)
         recursiveInorderPrintTree(Node->left,  file);
 
-    elementOutput(Node->type, Node->data, false, file);
+    dataOutput(Node->type, Node->data, false, file);
 
     if (Node->right != NULL)
         recursiveInorderPrintTree(Node->right, file);
@@ -218,7 +223,7 @@ ISERROR inorderPrintTree (tree *Tree, FILE *file)
         fprintf(file, "    Left   pointer: " "%p\n", Node->left);  \
         fprintf(file, "    Right  pointer: " "%p\n", Node->right); \
         fprintf(file, "    Element: ");                            \
-        elementOutput(Node->type, Node->data, true, file);         \
+        dataOutput(Node->type, Node->data, true, file);         \
         fprintf(file, "\n\n");                                     \
     }                                                              \
     while (0)
@@ -265,7 +270,7 @@ static ISERROR simpleTreeDumpFunction (const tree *Tree, const char *treename, c
             HTMLBOLD "Tree %s[%p] " HTMLBOLDRESET, 
             filename, line, function, treename, Tree);
 
-    fprintf(file, "{\n");
+    fprintf(file, "{\n\n    Size: %lu\n", Tree->size);
 
     putc('\n', file);
 
@@ -293,7 +298,7 @@ static ISERROR simpleTreeDumpFunction (const tree *Tree, const char *treename, c
             fprintf(tmp, "    node%p [shape=box3d, style=\"filled\" fillcolor=\"%s\"," \
                     "fontname=\"Arial\", label = ",                                    \
                     Node, globalFillColor);                                            \
-            elementOutput(Node->type, Node->data, true, tmp);                          \
+            dataOutput(Node->type, Node->data, true, tmp);                          \
             fprintf(tmp, "]\n");                                                       \
             fprintf(tmp, "    node%p -> node%p\n", NodeParent, Node);                  \
         }                                                                              \
@@ -325,7 +330,7 @@ static void fillTemporaryFile (const tree *Tree, FILE *tmp)
             "fontname=\"Arial\", label = ",
             Tree->root, globalFillColor);
     
-    elementOutput(Tree->root->type, Tree->root->data, true, tmp);
+    dataOutput(Tree->root->type, Tree->root->data, true, tmp);
     fprintf(tmp, "]\n");
     
     recursiveFileFiller(Tree->root, tmp);
