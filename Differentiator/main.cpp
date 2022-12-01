@@ -10,7 +10,7 @@ int main (const int argc, const char *argv[])
                "Error in filename parsing.", 
                -1);
 
-    FILE *output = fopen("Differentiator.htm", "w");
+    FILE *output = fopen("Differentiator.htm", "w+");
 
     tree *Tree = parseFile(filename);
     CHECKERROR(Tree != NULL &&
@@ -19,16 +19,16 @@ int main (const int argc, const char *argv[])
 
     treeDump(Tree, "Dump of readden tree.", output);
 
-    tree *Diff = differentiateTree(Tree);
-    CHECKERROR(Diff != NULL &&
-               "Error in tree differentiation.", 
-               -1);
+    // tree *Diff = differentiateTree(Tree);
+    // CHECKERROR(Diff != NULL &&
+    //            "Error in tree differentiation.", 
+    //            -1);
 
     treeDestructor(Tree);
 
-    treeDump(Diff, "Dump of differentiated tree.", output);
+    // treeDump(Diff, "Dump of differentiated tree.", output);
 
-    treeDestructor(Diff);
+    // treeDestructor(Diff);
 
     fclose(output);
 

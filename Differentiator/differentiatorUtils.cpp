@@ -2,50 +2,76 @@
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static node *differenciateSubtree (node *Node, size_t *newSize)
+void copySubtree (node **destNode, node *srcNode, size_t *subtreeSize)
 {
-    node *newNode = NULL;
+    (*subtreeSize)++;
 
-    switch(Node->type)
-    {
-        case OPERATION:
+    *destNode = nodeConstructor(srcNode->type, srcNode->data);
+
+    if (srcNode->left)
+        copySubtree(&((*destNode)->left),  srcNode->left,  subtreeSize);
+
+    if (srcNode->right)
+        copySubtree(&((*destNode)->right), srcNode->right, subtreeSize);
+
+    return;
+}
+
+// static node *differentiateSubtree (node *Node, size_t *newSize)
+// {
+//     switch(Node->type)
+//     {
+//         case OPERATION:
+//             (*newSize)++;
+
+//             #define DEFINE_OPERATION(name, string, ...) \
+//                 if (Node->data.operation == name)       \
+//                     __VA_ARGS__
             
-            break;
+//             #include "operations.h"
 
-        case VALUE:
-            break;
+//             #undef DEFINE_OPERATION
 
-        case VARIABLE:
-            break;
+//             break;
 
-        default:
-            PUTERROR("Unmatched type of node.");
-            return NULL;
-            break;
-    }
+//         case VALUE:
+//             (*newSize)++;
+//             return nodeConstructor(VALUE, {.value = 0});
+//             break;
 
-    return newNode;
-}
+//         case VARIABLE:
+//             (*newSize)++;
+//             return nodeConstructor(VALUE, {.value = 1});
+//             break;
 
-tree *differentiateTree (tree *Tree)
-{
-    CHECKERROR(Tree != NULL &&
-               "Can't differentiate NULL.",
-               NULL);
+//         default:
+//             PUTERROR("Unmatched type of node.");
+//             return NULL;
+//             break;
+//     }
 
-    tree *Diff = treeConstructor;
+//     return NULL;
+// }
 
-    CHECKERROR(Diff == NULL && 
-               "Can't create new tree", 
-               NULL);
+// tree *differentiateTree (tree *Tree)
+// {
+//     CHECKERROR(Tree != NULL &&
+//                "Can't differentiate NULL.",
+//                NULL);
 
-    size_t diffSize = 0;
-    node *diffRoot  = differenciateSubtree(Tree->root, &diffSize);
+//     tree *Diff = treeConstructor;
 
-    Diff->root = diffRoot;
-    Diff->size = diffSize;
+//     CHECKERROR(Diff == NULL && 
+//                "Can't create new tree", 
+//                NULL);
 
-    return Diff;
-}
+//     size_t diffSize = 0;
+//     node *diffRoot  = differentiateSubtree(Tree->root, &diffSize);
+
+//     Diff->root = diffRoot;
+//     Diff->size = diffSize;
+
+//     return Diff;
+// }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
