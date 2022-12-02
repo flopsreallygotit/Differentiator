@@ -7,7 +7,18 @@
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static ISERROR getExpression (node **Node, size_t *size, char **string);
+static ISERROR getExpressionPlus (node **Node, size_t *size, char **string);
+
+// Grammar scheme:
+
+// Grammar  ::= Express+ '\0'
+// Express+ ::= Express- {'+' Express-   }*
+// Express- ::= Term     {'-' Term       }*
+// Term     ::= Power    {['*' '\'] Power}*
+// Power    ::= Binary   {'^' Unary      }*
+// Unary    ::= 's''i''n' Parent | ... | Parent
+// Parent   ::= '(' Express+ ')' | ['A' - 'z'] | Number
+// Number   ::= ['+' '-']? ['0' - '9']+ {'.'['0' - '9']+}?
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -75,7 +86,7 @@ static ISERROR getParentheses (node **Node, size_t *size, char **string)
 
     if (isCurrentSymbol(string, '('))
     {
-        ISERROR expressionError = getExpression(Node, size, string);
+        ISERROR expressionError = getExpressionPlus(Node, size, string);
 
         CHECKERROR(isCurrentSymbol(string, ')') &&
                    "Get parentheses has errors.", 
@@ -114,13 +125,21 @@ static ISERROR getUnary (node **Node, size_t *size, char **string)
 {
     skipSpaces(string);
 
-    #define DEFINE_OPERATION(Name, String, ...)                      \
-        if (strncmp(*string, String, strlen(String)) == 0)           \
-        {                                                            \
-            *string += strlen(String);                               \
-            *Node = nodeConstructor(OPERATION, {.operation = Name}); \
-            (*size)++;                                               \
-            return getUnary(&(*Node)->left, size, string);           \
+    #define DEFINE_OPERATION(Name, String, ...)                                        \
+        if (strncmp(*string, String, strlen(String)) == 0)                             \
+        {                                                                              \
+            *string += strlen(String);                                                 \
+            *Node = nodeConstructor(OPERATION, {.operation = Name});                   \
+            (*size)++;                                                                 \
+            if (strncmp(String, "log", 3) == 0)                                        \
+            {                                                                          \
+                (*Node)->left  = NULL;                                                 \
+                (*Node)->right = NULL;                                                 \
+                CHECKERROR(getUnary(&(*Node)->left, size, string) == NOTERROR, ERROR); \
+                return getUnary(&(*Node)->right, size, string);                        \
+            }                                                                          \
+            else                                                                       \
+                return getUnary(&(*Node)->left, size, string);                         \
         } else
 
     #include "operations.h"
@@ -180,8 +199,8 @@ static ISERROR getTerm (node **Node, size_t *size, char **string)
 
     if (isCurrentSymbol(string, '*'))
     {
-        *Node = nodeConstructor(OPERATION, {.operation = MUL}); // TODO copypaste
-        (*Node)->left = leftNode; // TODO function ordering
+        *Node = nodeConstructor(OPERATION, {.operation = MUL}); 
+        (*Node)->left = leftNode; 
         (*size)++;
 
         CHECKERROR(getTerm(&(*Node)->right, size, string) == NOTERROR &&
@@ -206,44 +225,107 @@ static ISERROR getTerm (node **Node, size_t *size, char **string)
     return NOTERROR;
 }
 
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static ISERROR getExpression (node **Node, size_t *size, char **string)
+// static ISERROR getExpression (node **Node, size_t *size, char **string)
+// {
+//     skipSpaces(string);
+
+//     node *newNode = NULL;
+
+//     CHECKERROR(getTerm(&newNode, size, string) == NOTERROR && 
+//                "Get term has errors.",
+//                ERROR);
+
+//     skipSpaces(string);
+
+//     if (isCurrentSymbol(string, '+'))
+//     {
+//         *Node = nodeConstructor(OPERATION, {.operation = ADD}); 
+//         (*Node)->left = newNode;
+//         (*size)++;
+
+//         CHECKERROR(getExpression(&(*Node)->right, size, string) == NOTERROR &&
+//                    "Get expression has errors.",
+//                    ERROR);
+//     }
+
+//     else if (isCurrentSymbol(string, '-'))
+//     {
+//         *Node = nodeConstructor(OPERATION, {.operation = SUB});
+//         (*Node)->left = newNode;
+//         (*size)++;
+
+//         CHECKERROR(getExpression(&(*Node)->right, size, string) == NOTERROR &&
+//                    "Get expression has errors.",
+//                    ERROR);
+//     }
+
+//     else
+//         *Node = newNode;
+    
+//     return NOTERROR;
+// }
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static ISERROR getExpressionMinus (node **Node, size_t *size, char **string)
 {
     skipSpaces(string);
 
-    node *leftNode = NULL;
+    node *newNode = NULL;
 
-    CHECKERROR(getTerm(&leftNode, size, string) == NOTERROR &&
+    CHECKERROR(getTerm(&newNode, size, string) == NOTERROR && 
                "Get term has errors.",
+               ERROR);
+
+    skipSpaces(string);
+
+    if (isCurrentSymbol(string, '-'))
+    {
+        *Node = nodeConstructor(OPERATION, {.operation = SUB}); 
+        (*Node)->left = newNode;
+        (*size)++;
+
+        CHECKERROR(getExpressionMinus(&(*Node)->right, size, string) == NOTERROR &&
+                   "Get expression minus has errors.",
+                   ERROR);
+    }
+
+    else
+        *Node = newNode;
+    
+    return NOTERROR;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static ISERROR getExpressionPlus (node **Node, size_t *size, char **string)
+{
+    skipSpaces(string);
+
+    node *newNode = NULL;
+
+    CHECKERROR(getExpressionMinus(&newNode, size, string) == NOTERROR && 
+               "Get expression minus has errors.",
                ERROR);
 
     skipSpaces(string);
 
     if (isCurrentSymbol(string, '+'))
     {
-        *Node = nodeConstructor(OPERATION, {.operation = ADD}); // TODO copypaste
-        (*Node)->left = leftNode;
+        *Node = nodeConstructor(OPERATION, {.operation = ADD}); 
+        (*Node)->left = newNode;
         (*size)++;
 
-        CHECKERROR(getExpression(&(*Node)->right, size, string) == NOTERROR &&
-                   "Get expression has errors.",
-                   ERROR);
-    }
-
-    else if (isCurrentSymbol(string, '-'))
-    {
-        *Node = nodeConstructor(OPERATION, {.operation = SUB});
-        (*Node)->left = leftNode;
-        (*size)++;
-
-        CHECKERROR(getExpression(&(*Node)->right, size, string) == NOTERROR &&
-                   "Get expression has errors.",
+        CHECKERROR(getExpressionPlus(&(*Node)->right, size, string) == NOTERROR &&
+                   "Get expression plus has errors.",
                    ERROR);
     }
 
     else
-        *Node = leftNode;
+        *Node = newNode;
     
     return NOTERROR;
 }
@@ -252,7 +334,7 @@ static ISERROR getExpression (node **Node, size_t *size, char **string)
 
 static ISERROR getGrammar (node **Node, size_t *size, char **string)
 {
-    CHECKERROR(getExpression(Node, size, string) == NOTERROR &&
+    CHECKERROR(getExpressionPlus(Node, size, string) == NOTERROR &&
                "Get expression has errors",
                ERROR);
 
