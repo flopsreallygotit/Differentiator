@@ -10,7 +10,6 @@
 static ISERROR getExpressionPlus (node **Node, size_t *size, char **string);
 
 // Grammar scheme:
-
 // Grammar  ::= Express+ '\0'
 // Express+ ::= Express- {'+' Express-   }*
 // Express- ::= Term     {'-' Term       }*

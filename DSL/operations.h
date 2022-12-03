@@ -42,13 +42,31 @@
 
 #endif
 
+#ifndef SINNODE
+
+#define SINNODE nodeConstructor(OPERATION, {.operation = SIN})
+
+#endif
+
+#ifndef COSNODE
+
+#define COSNODE nodeConstructor(OPERATION, {.operation = COS})
+
+#endif
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#ifndef VALNODE
+
+#define VALNODE(Value) nodeConstructor(VALUE, {.value = Value})
+
+#endif
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 DEFINE_OPERATION(ADD,    "+",
 {
     node *addNode = ADDNODE;
-
-    printf("Created add node with address %p", addNode);
 
     if (Node->left)
         addNode->left  = DIFF(Node->left);
@@ -86,14 +104,16 @@ DEFINE_OPERATION(MUL,    "*",
     if (Node->left)
     {
         addNode->left->left  = DIFF(Node->left);
-        COPY(&(addNode->left->right),  Node->left);
+        COPY(&(addNode->left->right),  Node->right);
     }
     
     if (Node->right)
     {
         addNode->right->left = DIFF(Node->right);
-        COPY(&(addNode->right->right), Node->right);
+        COPY(&(addNode->right->right), Node->left);
     }
+
+    *newSize += 2;
 
     return addNode;
 })
@@ -102,7 +122,7 @@ DEFINE_OPERATION(MUL,    "*",
 
 DEFINE_OPERATION(DIV,    "/",
 {
-    node *subNode  = SUBNODE; // TODO Check on constant.
+    node *subNode  = SUBNODE;
 
     subNode->left  = MULNODE;
     subNode->right = MULNODE;
@@ -110,13 +130,13 @@ DEFINE_OPERATION(DIV,    "/",
     if (Node->left)
     {
         subNode->left->left  = DIFF(Node->left);
-        COPY(&(subNode->left->right), Node->left);
+        COPY(&(subNode->left->right), Node->right);
     }
 
     if (Node->right)
     {
         subNode->right->left = DIFF(Node->right);
-        COPY(&(subNode->right->right), Node->right);
+        COPY(&(subNode->right->right), Node->left);
     }
 
     node *divNode  = DIVNODE;
@@ -127,6 +147,10 @@ DEFINE_OPERATION(DIV,    "/",
     if (Node->right)
         COPY(&(divNode->right->left), Node->right);
 
+    divNode->right->right = VALNODE(2);
+
+    *newSize += 4;
+
     return divNode;
 })
 
@@ -134,40 +158,162 @@ DEFINE_OPERATION(DIV,    "/",
 
 DEFINE_OPERATION(POW,    "^",
 {
-    return NULL;
+    node *mulNode  = MULNODE;
+    mulNode->right = MULNODE;
+
+    node *powNode = POWNODE;
+    if (Node->left)
+        COPY(&(powNode->left), Node->left);
+
+    node *subNode = SUBNODE;
+    subNode->right = VALNODE(1);
+    COPY(&(subNode->left ), Node->right);
+
+    powNode->right = subNode;
+
+    mulNode->right->right = powNode;
+    COPY(&(mulNode->right->left), Node->right)
+
+    mulNode->left = DIFF(Node->left);
+
+    *newSize += 4;
+
+    return mulNode;
 })
 
 DEFINE_OPERATION(SIN,    "sin",
 {
-    return NULL;
+    CHECKERROR(Node->left != NULL &&
+               "Can't differentiate sin without argument.", 
+               NULL);
+
+    node *mulNode = MULNODE;
+
+    mulNode->left = DIFF(Node->left);
+
+    mulNode->right = COSNODE;
+    COPY(&(mulNode->right->left), Node->left);
+
+    (*newSize)++;
+
+    return mulNode;
 })
 
 DEFINE_OPERATION(COS,    "cos",
 {
-    return NULL;
+    CHECKERROR(Node->left != NULL &&
+               "Can't differentiate cos without argument.", 
+               NULL);
+
+    node *mulNode  = MULNODE;
+    mulNode->left  = VALNODE(-1);
+    mulNode->right = MULNODE;
+
+    mulNode->right->left = DIFF(Node->left);
+
+    mulNode->right->right = SINNODE;
+    COPY(&(mulNode->right->right->left), Node->left);
+
+    *newSize += 3;
+
+    return mulNode;
 })
 
 DEFINE_OPERATION(TG,     "tg",
 {
-    return NULL;
+    CHECKERROR(Node->left != NULL &&
+               "Can't differentiate tg without argument.", 
+               NULL);
+
+    node *divNode = DIVNODE;
+
+    divNode->left = DIFF(Node->left);
+
+    divNode->right = POWNODE;
+    divNode->right->left  = COSNODE;
+    divNode->right->right = VALNODE(2);
+    
+    COPY(&(divNode->right->left->left), Node->left);
+
+    *newSize += 3;
+
+    return divNode;
 })
 
 DEFINE_OPERATION(CTG,    "ctg",
 {
-    return NULL;
+    CHECKERROR(Node->left != NULL &&
+               "Can't differentiate ctg without argument.", 
+               NULL);
+
+    node *mulNode = MULNODE;
+    node *divNode = DIVNODE;
+
+    divNode->left = DIFF(Node->left);
+
+    divNode->right = POWNODE;
+    divNode->right->left  = SINNODE;
+    divNode->right->right = VALNODE(2);
+    
+    COPY(&(divNode->right->left->left), Node->left);
+
+    mulNode->left  = VALNODE(-1);
+    mulNode->right = divNode;
+
+    *newSize += 5;
+
+    return mulNode;
 })
 
 DEFINE_OPERATION(ARCSIN, "arcsin",
 {
-    return NULL;
+    node *divNode = DIVNODE;
+    divNode->left = DIFF(Node->left);
+
+    divNode->right = POWNODE;
+    divNode->right->right = VALNODE(0.5);
+
+    node *subNode  = SUBNODE;
+    subNode->right = POWNODE;
+    subNode->left  = VALNODE(1);
+
+    subNode->right->right = VALNODE(2);
+    COPY(&(subNode->right->left), Node->left);
+
+    divNode->right->left = subNode;
+
+    *newSize += 6;
+    
+    return divNode;
 })
 
 DEFINE_OPERATION(ARCCOS, "arccos",
 {
-    return NULL;
-})
+    CHECKERROR(Node->left != NULL &&
+               "Can't differentiate arccos without argument.", 
+               NULL);
 
-DEFINE_OPERATION(LOG,    "log",
-{
-    return NULL;
+    node *mulNode = MULNODE;
+    mulNode->left = VALNODE(-1);
+
+    node *divNode = DIVNODE;
+    divNode->left = DIFF(Node->left);
+
+    divNode->right = POWNODE;
+    divNode->right->right = VALNODE(0.5);
+
+    node *subNode  = SUBNODE;
+    subNode->right = POWNODE;
+    subNode->left  = VALNODE(1);
+
+    subNode->right->right = VALNODE(2);
+    COPY(&(subNode->right->left), Node->left);
+
+    divNode->right->left = subNode;
+
+    mulNode->right = divNode;
+
+    *newSize += 8;
+
+    return mulNode;
 })
