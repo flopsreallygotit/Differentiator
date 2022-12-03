@@ -80,7 +80,38 @@ tree *differentiateTree (const tree *Tree)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static ISERROR solveConstants (node *Node, size_t *Size)
+static void countSubtreeSize (node *Node, size_t *Size)
+{
+    if (Node->left)
+        countSubtreeSize(Node->left,  Size);
+
+    if (Node->right)
+        countSubtreeSize(Node->right, Size);
+
+    (*Size)++;
+
+    return;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static void replaceSubtreeWithNode (node *Node, TYPE type, data_t data)
+{
+    nodeDestructor(Node->left);
+    nodeDestructor(Node->right);
+
+    Node->left  = NULL;
+    Node->right = NULL;
+
+    Node->type = type;
+    Node->data = data;
+
+    return;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static ISERROR solveConstants (node *Node, size_t *Size) //TODO too long function
 {
     if (Node->left        != NULL && 
        (Node->left->left  != NULL || 
@@ -162,19 +193,77 @@ static ISERROR solveConstants (node *Node, size_t *Size)
         }
     }
 
+    if (Node->type == OPERATION && 
+        Node->data.operation == SUB &&
+        Node->left  != NULL &&
+        Node->right == NULL)
+        replaceSubtreeWithNode(Node, VALUE, {.value = -1 * Node->left->data.value});
+    
+
     if (isfinite(result))
     {
         *Size -= 2;
-        nodeDestructor(Node->left);
-        nodeDestructor(Node->right);
 
-        Node->left  = NULL;
-        Node->right = NULL;
-
-        Node->type = VALUE;
-        Node->data = {.value = result};
+        replaceSubtreeWithNode(Node, VALUE, {.value = result});
     }
 
+    return NOTERROR;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#define TRANSPORTNODE(newNode)          \
+    *Size -= 2;                         \
+    node *pointerToNode = newNode;      \
+    Node->data  = pointerToNode->data;  \
+    Node->type  = pointerToNode->type;  \
+    Node->left  = pointerToNode->left;  \
+    Node->right = pointerToNode->right; \
+    free(pointerToNode);
+
+static ISERROR removeUnusedMuls (node *Node, size_t *Size)
+{
+    if (Node->left != NULL)
+        removeUnusedMuls(Node->left,  Size);
+
+    if (Node->right != NULL)
+        removeUnusedMuls(Node->right, Size);
+
+    if (Node->type == OPERATION &&
+        Node->data.operation == MUL)
+    {
+        double leftNumber  = NAN;
+        double rightNumber = NAN;
+
+        if (Node->left->type  == VALUE)
+            leftNumber  = Node->left->data.value;
+
+        if (Node->right->type == VALUE)
+            rightNumber = Node->right->data.value;
+
+        if ((isfinite(leftNumber)  && differenceSign(leftNumber,  0) == 0) ||
+            (isfinite(rightNumber) && differenceSign(rightNumber, 0) == 0))
+        {
+            size_t subtreeSize = 0;
+            countSubtreeSize(Node, &subtreeSize);
+            
+            subtreeSize--;
+            *Size -= subtreeSize;
+
+            replaceSubtreeWithNode(Node, VALUE, {.value = 0});
+        }
+
+        else if (isfinite(leftNumber) && differenceSign(leftNumber, 1) == 0)
+        {
+            TRANSPORTNODE(Node->right);
+        }
+
+        else if (isfinite(rightNumber) && differenceSign(rightNumber, 1) == 0)
+        {
+            TRANSPORTNODE(Node->left);
+        }
+    }
+    
     return NOTERROR;
 }
 
@@ -186,7 +275,8 @@ ISERROR simplifyTree (tree *Tree)
                "Can't simplify null.",
                NULLPOINTER);
 
-    solveConstants(Tree->root, &(Tree->size));
+    removeUnusedMuls(Tree->root, &(Tree->size));
+    solveConstants(Tree->root,   &(Tree->size));
 
     return NOTERROR;
 }

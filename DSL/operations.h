@@ -115,7 +115,7 @@ DEFINE_OPERATION(MUL,    "*",
         COPY(&(addNode->right->right), Node->left);
     }
 
-    *newSize += 2;
+    *newSize += 4;
 
     return addNode;
 })
@@ -151,7 +151,7 @@ DEFINE_OPERATION(DIV,    "/",
 
     divNode->right->right = VALNODE(2);
 
-    *newSize += 4;
+    *newSize += 0;
 
     return divNode;
 })
@@ -161,7 +161,7 @@ DEFINE_OPERATION(DIV,    "/",
 DEFINE_OPERATION(POW,    "^",
 {
     node *mulNode  = MULNODE;
-    mulNode->right = MULNODE;
+    mulNode->right = MULNODE; // TODO use logarithmic differentiation
 
     node *powNode = POWNODE;
     if (Node->left)
@@ -216,7 +216,7 @@ DEFINE_OPERATION(COS,    "cos",
     mulNode->right->right = SINNODE;
     COPY(&(mulNode->right->right->left), Node->left);
 
-    *newSize += 3;
+    *newSize += -12;
 
     return mulNode;
 })
@@ -237,7 +237,7 @@ DEFINE_OPERATION(TG,     "tg",
     
     COPY(&(divNode->right->left->left), Node->left);
 
-    *newSize += 3;
+    *newSize += -53;
 
     return divNode;
 })
@@ -262,7 +262,7 @@ DEFINE_OPERATION(CTG,    "ctg",
     mulNode->left  = VALNODE(-1);
     mulNode->right = divNode;
 
-    *newSize += 5;
+    *newSize += 45;
 
     return mulNode;
 })
@@ -284,7 +284,7 @@ DEFINE_OPERATION(ARCSIN, "arcsin",
 
     divNode->right->left = subNode;
 
-    *newSize += 6;
+    *newSize += -6;
     
     return divNode;
 })
@@ -315,7 +315,7 @@ DEFINE_OPERATION(ARCCOS, "arccos",
 
     mulNode->right = divNode;
 
-    *newSize += 8;
+    *newSize += -8;
 
     return mulNode;
 })

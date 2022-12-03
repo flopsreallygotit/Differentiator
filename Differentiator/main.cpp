@@ -13,31 +13,26 @@ int main (const int argc, const char *argv[])
     FILE *output = fopen("Differentiator.htm", "w+");
 
     tree *Tree = parseFile(filename);
-
     CHECKERROR(Tree != NULL &&
                "Error in file parsing.", 
                -1);
 
     DOTHIS(treeDump(Tree, "Dump of readden tree.", output));
+    DOTHIS(simplifyTree(Tree));
+    DOTHIS(treeDump(Tree, "Dump of tree after simplifier.", output));
 
     tree *Diff = differentiateTree(Tree);
-
     CHECKERROR(Diff != NULL &&
                "Error in tree differentiation.", 
                -1);
-
-    DOTHIS(simplifyTree(Tree));
-
-    DOTHIS(treeDump(Tree, "Dump of tree after simplifier.", output));
+//FIXME FIX UNARY PLUSSES SIMPLIFICATION
+//FIXME MISHA'S BUG
 
     DOTHIS(treeDestructor(Tree));
 
     DOTHIS(treeDump(Diff, "Dump of differentiated tree.", output));
-
     DOTHIS(simplifyTree(Diff));
-
     DOTHIS(treeDump(Diff, "Dump of differentiated tree after simplifier.", output));
-
     DOTHIS(treeDestructor(Diff));
 
     fclose(output);

@@ -3,45 +3,75 @@
 <pre>
 <h2>Dump of readden tree.</h2>
 <p style="font-family:verdana; font-size:200%;"><p style="color:blue;">
-Tree dump at Differentiator/main.cpp:21 in int main(int, const char**)
-</p><b>Tree Tree[0x4b7d5c0] </b>{
+Tree dump at Differentiator/main.cpp:20 in int main(int, const char**)
+</p><b>Tree Tree[0x5598792e56d0] </b>{
 
-    Size: 7
+    Size: 13
 
-    Node   pointer: 0x4b7d740
-    Left   pointer: 0x4b7d680
-    Right  pointer: 0x4b7d800
+    Node   pointer: 0x5598792e57c0
+    Left   pointer: 0x5598792e5700
+    Right  pointer: 0x5598792e5910
     Element: "+"
 
-    Node   pointer: 0x4b7d680
-    Left   pointer: 0x4b7d620
-    Right  pointer: 0x4b7d6e0
+    Node   pointer: 0x5598792e5700
+    Left   pointer: 0x5598792e5730
+    Right  pointer: (nil)
+    Element: "+"
+
+    Node   pointer: 0x5598792e5730
+    Left   pointer: 0x5598792e5760
+    Right  pointer: (nil)
+    Element: "+"
+
+    Node   pointer: 0x5598792e5760
+    Left   pointer: 0x5598792e5790
+    Right  pointer: (nil)
     Element: "-"
 
-    Node   pointer: 0x4b7d620
-    Left   pointer: (nil)
-    Right  pointer: (nil)
-    Element: "1"
-
-    Node   pointer: 0x4b7d6e0
-    Left   pointer: (nil)
-    Right  pointer: (nil)
-    Element: "2"
-
-    Node   pointer: 0x4b7d800
-    Left   pointer: 0x4b7d7a0
-    Right  pointer: 0x4b7d860
-    Element: "+"
-
-    Node   pointer: 0x4b7d7a0
+    Node   pointer: 0x5598792e5790
     Left   pointer: (nil)
     Right  pointer: (nil)
     Element: "3"
 
-    Node   pointer: 0x4b7d860
+    Node   pointer: 0x5598792e5910
+    Left   pointer: 0x5598792e57f0
+    Right  pointer: 0x5598792e5940
+    Element: "*"
+
+    Node   pointer: 0x5598792e57f0
+    Left   pointer: 0x5598792e5820
+    Right  pointer: (nil)
+    Element: "-"
+
+    Node   pointer: 0x5598792e5820
+    Left   pointer: 0x5598792e5850
+    Right  pointer: (nil)
+    Element: "-"
+
+    Node   pointer: 0x5598792e5850
+    Left   pointer: 0x5598792e5880
+    Right  pointer: (nil)
+    Element: "-"
+
+    Node   pointer: 0x5598792e5880
+    Left   pointer: 0x5598792e58b0
+    Right  pointer: (nil)
+    Element: "-"
+
+    Node   pointer: 0x5598792e58b0
+    Left   pointer: 0x5598792e58e0
+    Right  pointer: (nil)
+    Element: "-"
+
+    Node   pointer: 0x5598792e58e0
     Left   pointer: (nil)
     Right  pointer: (nil)
-    Element: "5"
+    Element: "2"
+
+    Node   pointer: 0x5598792e5940
+    Left   pointer: (nil)
+    Right  pointer: (nil)
+    Element: "x"
 
 }
 
@@ -52,17 +82,155 @@ Tree dump at Differentiator/main.cpp:21 in int main(int, const char**)
 <pre>
 <h2>Dump of tree after simplifier.</h2>
 <p style="font-family:verdana; font-size:200%;"><p style="color:blue;">
-Tree dump at Differentiator/main.cpp:31 in int main(int, const char**)
-</p><b>Tree Tree[0x4b7d5c0] </b>{
+Tree dump at Differentiator/main.cpp:22 in int main(int, const char**)
+</p><b>Tree Tree[0x5598792e56d0] </b>{
 
-    Size: 1
+    Size: 13
 
-    Node   pointer: 0x4b7d740
+    Node   pointer: 0x5598792e57c0
+    Left   pointer: 0x5598792e5700
+    Right  pointer: 0x5598792e5910
+    Element: "+"
+
+    Node   pointer: 0x5598792e5700
+    Left   pointer: 0x5598792e5730
+    Right  pointer: (nil)
+    Element: "+"
+
+    Node   pointer: 0x5598792e5730
+    Left   pointer: 0x5598792e5760
+    Right  pointer: (nil)
+    Element: "+"
+
+    Node   pointer: 0x5598792e5760
     Left   pointer: (nil)
     Right  pointer: (nil)
-    Element: "7"
+    Element: "-3"
+
+    Node   pointer: 0x5598792e5910
+    Left   pointer: 0x5598792e57f0
+    Right  pointer: 0x5598792e5940
+    Element: "*"
+
+    Node   pointer: 0x5598792e57f0
+    Left   pointer: (nil)
+    Right  pointer: (nil)
+    Element: "-2"
+
+    Node   pointer: 0x5598792e5940
+    Left   pointer: (nil)
+    Right  pointer: (nil)
+    Element: "x"
 
 }
 
 </p>
 <img src = ./TreeDumpSources/graph1.png>
+
+<hr>
+<pre>
+<h2>Dump of differentiated tree.</h2>
+<p style="font-family:verdana; font-size:200%;"><p style="color:blue;">
+Tree dump at Differentiator/main.cpp:31 in int main(int, const char**)
+</p><b>Tree Diff[0x5598792e6980] </b>{
+
+    Size: 11
+
+    Node   pointer: 0x5598792e69b0
+    Left   pointer: 0x5598792e69e0
+    Right  pointer: 0x5598792e6a70
+    Element: "+"
+
+    Node   pointer: 0x5598792e69e0
+    Left   pointer: 0x5598792e6a10
+    Right  pointer: (nil)
+    Element: "+"
+
+    Node   pointer: 0x5598792e6a10
+    Left   pointer: 0x5598792e6a40
+    Right  pointer: (nil)
+    Element: "+"
+
+    Node   pointer: 0x5598792e6a40
+    Left   pointer: (nil)
+    Right  pointer: (nil)
+    Element: "0"
+
+    Node   pointer: 0x5598792e6a70
+    Left   pointer: 0x5598792e6aa0
+    Right  pointer: 0x5598792e6ad0
+    Element: "+"
+
+    Node   pointer: 0x5598792e6aa0
+    Left   pointer: 0x5598792e6b00
+    Right  pointer: 0x5598792e6b30
+    Element: "*"
+
+    Node   pointer: 0x5598792e6b00
+    Left   pointer: (nil)
+    Right  pointer: (nil)
+    Element: "0"
+
+    Node   pointer: 0x5598792e6b30
+    Left   pointer: (nil)
+    Right  pointer: (nil)
+    Element: "x"
+
+    Node   pointer: 0x5598792e6ad0
+    Left   pointer: 0x5598792e6b60
+    Right  pointer: 0x5598792e6b90
+    Element: "*"
+
+    Node   pointer: 0x5598792e6b60
+    Left   pointer: (nil)
+    Right  pointer: (nil)
+    Element: "1"
+
+    Node   pointer: 0x5598792e6b90
+    Left   pointer: (nil)
+    Right  pointer: (nil)
+    Element: "-2"
+
+}
+
+</p>
+<img src = ./TreeDumpSources/graph2.png>
+
+<hr>
+<pre>
+<h2>Dump of differentiated tree after simplifier.</h2>
+<p style="font-family:verdana; font-size:200%;"><p style="color:blue;">
+Tree dump at Differentiator/main.cpp:33 in int main(int, const char**)
+</p><b>Tree Diff[0x5598792e6980] </b>{
+
+    Size: 5
+
+    Node   pointer: 0x5598792e69b0
+    Left   pointer: 0x5598792e69e0
+    Right  pointer: 0x5598792e6a70
+    Element: "+"
+
+    Node   pointer: 0x5598792e69e0
+    Left   pointer: 0x5598792e6a10
+    Right  pointer: (nil)
+    Element: "+"
+
+    Node   pointer: 0x5598792e6a10
+    Left   pointer: 0x5598792e6a40
+    Right  pointer: (nil)
+    Element: "+"
+
+    Node   pointer: 0x5598792e6a40
+    Left   pointer: (nil)
+    Right  pointer: (nil)
+    Element: "0"
+
+    Node   pointer: 0x5598792e6a70
+    Left   pointer: (nil)
+    Right  pointer: (nil)
+    Element: "-2"
+
+}
+
+</p>
+<img src = ./TreeDumpSources/graph3.png>
