@@ -85,20 +85,26 @@ static ISERROR getParentheses (node **Node, size_t *size, char **string)
 
     if (isCurrentSymbol(string, '('))
     {
-        ISERROR expressionError = getExpressionPlus(Node, size, string);
+        CHECKERROR(getExpressionPlus(Node, size, string) == NOTERROR &&
+                   "Get expression plus has errors.",
+                   ERROR);
 
         CHECKERROR(isCurrentSymbol(string, ')') &&
                    "Get parentheses has errors.", 
                    ERROR);
 
-        return expressionError;
+        return NOTERROR;
     }
 
     else if (isalpha(**string))
     {
         *Node = nodeConstructor(VARIABLE, {.variable = **string});
-        (*size)++;
 
+        CHECKERROR(*Node != NULL &&
+                   "Can't create node for variable.",
+                   ALLOCATIONERROR);
+
+        (*size)++;
         (*string)++;
 
         return NOTERROR;
@@ -107,12 +113,18 @@ static ISERROR getParentheses (node **Node, size_t *size, char **string)
     else
     {
         double number = 0;
-        ISERROR numberError = getNumber(&number, string);
+
+        CHECKERROR(getNumber(&number, string) == NOTERROR &&
+                   "Get number has errors.", 
+                   ERROR);
 
         *Node = nodeConstructor(VALUE, {.value = number});
-        (*size)++;
 
-        return numberError;
+        CHECKERROR(*Node != NULL &&
+                   "Can't create node for value.",
+                   ALLOCATIONERROR);
+
+        (*size)++;
     }
 
     return NOTERROR;
@@ -168,6 +180,11 @@ static ISERROR getPower (node **Node, size_t *size, char **string)
     if (isCurrentSymbol(string, '^'))
     {
         *Node = nodeConstructor(OPERATION, {.operation = POW});
+
+        CHECKERROR(*Node != NULL &&
+                   "Can't create node for pow.",
+                   ALLOCATIONERROR);
+
         (*Node)->left = leftNode;
         (*size)++;
 
@@ -199,6 +216,11 @@ static ISERROR getTerm (node **Node, size_t *size, char **string)
     if (isCurrentSymbol(string, '*'))
     {
         *Node = nodeConstructor(OPERATION, {.operation = MUL}); 
+
+        CHECKERROR(*Node != NULL &&
+                   "Can't create node for mul.",
+                   ALLOCATIONERROR);
+
         (*Node)->left = leftNode; 
         (*size)++;
 
@@ -224,49 +246,6 @@ static ISERROR getTerm (node **Node, size_t *size, char **string)
     return NOTERROR;
 }
 
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-// static ISERROR getExpression (node **Node, size_t *size, char **string)
-// {
-//     skipSpaces(string);
-
-//     node *newNode = NULL;
-
-//     CHECKERROR(getTerm(&newNode, size, string) == NOTERROR && 
-//                "Get term has errors.",
-//                ERROR);
-
-//     skipSpaces(string);
-
-//     if (isCurrentSymbol(string, '+'))
-//     {
-//         *Node = nodeConstructor(OPERATION, {.operation = ADD}); 
-//         (*Node)->left = newNode;
-//         (*size)++;
-
-//         CHECKERROR(getExpression(&(*Node)->right, size, string) == NOTERROR &&
-//                    "Get expression has errors.",
-//                    ERROR);
-//     }
-
-//     else if (isCurrentSymbol(string, '-'))
-//     {
-//         *Node = nodeConstructor(OPERATION, {.operation = SUB});
-//         (*Node)->left = newNode;
-//         (*size)++;
-
-//         CHECKERROR(getExpression(&(*Node)->right, size, string) == NOTERROR &&
-//                    "Get expression has errors.",
-//                    ERROR);
-//     }
-
-//     else
-//         *Node = newNode;
-    
-//     return NOTERROR;
-// }
-
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 static ISERROR getExpressionMinus (node **Node, size_t *size, char **string)
@@ -284,6 +263,11 @@ static ISERROR getExpressionMinus (node **Node, size_t *size, char **string)
     if (isCurrentSymbol(string, '-'))
     {
         *Node = nodeConstructor(OPERATION, {.operation = SUB}); 
+
+        CHECKERROR(*Node != NULL &&
+                   "Can't create node for sub.",
+                   ALLOCATIONERROR);
+
         (*Node)->left = newNode;
         (*size)++;
 
@@ -315,6 +299,11 @@ static ISERROR getExpressionPlus (node **Node, size_t *size, char **string)
     if (isCurrentSymbol(string, '+'))
     {
         *Node = nodeConstructor(OPERATION, {.operation = ADD}); 
+
+        CHECKERROR(*Node != NULL &&
+                   "Can't create node for add.",
+                   ALLOCATIONERROR);
+
         (*Node)->left = newNode;
         (*size)++;
 
@@ -375,10 +364,17 @@ tree *parseFile (const char *filename)
                "Can't create tree.",
                NULL);
 
-    getGrammar(&(Tree->root), &(Tree->size), &string);
+    ISERROR getGrammarError = getGrammar(&(Tree->root), &(Tree->size), &string);
 
     free(pointer);
     pointer = NULL;
+
+    if (getGrammarError != NOTERROR)
+    {
+        PUTERROR("Can't create tree from file.");
+        treeDestructor(Tree);
+        return NULL;
+    }
 
     return Tree;
 }

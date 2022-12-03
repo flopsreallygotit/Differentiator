@@ -29,9 +29,13 @@ tree *treeConstructorFunction (const char *filename, const int line);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+/// @brief Node destructor.
+/// @param Node Pointer to node.
+void nodeDestructor (node *Node);
+
 /// @brief Tree destructor.
 /// @param Tree Pointer to tree.
-void treeDestructor (tree *Tree);
+ISERROR treeDestructor (tree *Tree);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

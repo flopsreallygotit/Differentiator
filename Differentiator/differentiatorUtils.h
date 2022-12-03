@@ -26,11 +26,13 @@ tree *parseFile (const char *filename);
 
 /// @brief Differentiate expression.
 /// @param Tree Pointer to tree of expression.
-tree *differentiateTree(tree *Tree);
+tree *differentiateTree(const tree *Tree);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void copySubtree (node **destNode, node *srcNode, size_t *subtreeSize);
+/// @brief Simplifies tree.
+/// @param Tree Pointer to tree.
+ISERROR simplifyTree (tree *Tree);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

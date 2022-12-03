@@ -13,22 +13,32 @@ int main (const int argc, const char *argv[])
     FILE *output = fopen("Differentiator.htm", "w+");
 
     tree *Tree = parseFile(filename);
+
     CHECKERROR(Tree != NULL &&
                "Error in file parsing.", 
                -1);
 
-    treeDump(Tree, "Dump of readden tree.", output);
+    DOTHIS(treeDump(Tree, "Dump of readden tree.", output));
 
-    tree *Diff = differentiateTree(Tree);
-    CHECKERROR(Diff != NULL &&
-               "Error in tree differentiation.", 
-               -1);
+    // tree *Diff = differentiateTree(Tree);
 
-    treeDestructor(Tree);
+    // CHECKERROR(Diff != NULL &&
+    //            "Error in tree differentiation.", 
+    //            -1);
 
-    treeDump(Diff, "Dump of differentiated tree.", output);
+    DOTHIS(simplifyTree(Tree));
 
-    treeDestructor(Diff);
+    DOTHIS(treeDump(Tree, "Dump of tree after simplifier.", output));
+
+    DOTHIS(treeDestructor(Tree));
+
+    // DOTHIS(treeDump(Diff, "Dump of differentiated tree.", output));
+
+    // DOTHIS(simplifyTree(Diff));
+
+    // DOTHIS(treeDump(Diff, "Dump of differentiated tree after simplifier.", output));
+
+    // DOTHIS(treeDestructor(Diff));
 
     fclose(output);
 

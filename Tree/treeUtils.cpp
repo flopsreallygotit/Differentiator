@@ -45,19 +45,19 @@ tree *treeConstructorFunction (const char *filename, const int line)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static void recursiveTreeDestroyer (node *Node)
+void nodeDestructor (node *Node)
 {
     if (Node == NULL)
         return;
 
     if (Node->left  != NULL)
-        recursiveTreeDestroyer(Node->left);
+        nodeDestructor(Node->left);
     
     if (Node->right != NULL)
-        recursiveTreeDestroyer(Node->right);
+        nodeDestructor(Node->right);
 
-    Node->left   = NULL;
-    Node->right  = NULL;
+    Node->left  = NULL;
+    Node->right = NULL;
 
     free(Node);
     Node = NULL;
@@ -65,20 +65,20 @@ static void recursiveTreeDestroyer (node *Node)
     return;
 }
 
-void treeDestructor (tree *Tree)
+ISERROR treeDestructor (tree *Tree)
 {
     CHECKERROR(Tree != NULL && 
                "You are trying to destroy nullpointer.", 
-               (void) NULL);
+               NULLPOINTER);
 
     Tree->size = 0;
 
-    recursiveTreeDestroyer(Tree->root);
+    nodeDestructor(Tree->root);
 
     free(Tree);
     Tree = NULL;
 
-    return;
+    return NOTERROR;
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
