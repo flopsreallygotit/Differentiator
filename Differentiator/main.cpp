@@ -20,11 +20,11 @@ int main (const int argc, const char *argv[])
 
     DOTHIS(treeDump(Tree, "Dump of readden tree.", output));
 
-    // tree *Diff = differentiateTree(Tree);
+    tree *Diff = differentiateTree(Tree);
 
-    // CHECKERROR(Diff != NULL &&
-    //            "Error in tree differentiation.", 
-    //            -1);
+    CHECKERROR(Diff != NULL &&
+               "Error in tree differentiation.", 
+               -1);
 
     DOTHIS(simplifyTree(Tree));
 
@@ -32,13 +32,13 @@ int main (const int argc, const char *argv[])
 
     DOTHIS(treeDestructor(Tree));
 
-    // DOTHIS(treeDump(Diff, "Dump of differentiated tree.", output));
+    DOTHIS(treeDump(Diff, "Dump of differentiated tree.", output));
 
-    // DOTHIS(simplifyTree(Diff));
+    DOTHIS(simplifyTree(Diff));
 
-    // DOTHIS(treeDump(Diff, "Dump of differentiated tree after simplifier.", output));
+    DOTHIS(treeDump(Diff, "Dump of differentiated tree after simplifier.", output));
 
-    // DOTHIS(treeDestructor(Diff));
+    DOTHIS(treeDestructor(Diff));
 
     fclose(output);
 
