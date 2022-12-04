@@ -37,14 +37,16 @@ enum TYPE
 {
     OPERATION = 0,
     VARIABLE  = 1,
-    UNKNOWN   = 2,
-    VALUE     = 3,
+    VALUE     = 2,
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-/// @brief Color of node filling in dump.
-static const char globalFillColor[] = "#9542F5";
+// Colors of node filling in dump.
+
+static const char globalOperationFillColor[] = "#9542F5";
+static const char globalVariableFillColor[]  = "#BE11D1";
+static const char globalValueFillColor[]     = "#348BAD";
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

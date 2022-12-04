@@ -287,23 +287,47 @@ static ISERROR simpleTreeDumpFunction (const tree *Tree, const char *treename, c
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+void outputNode (node *Node, FILE *tmp)
+{
+    const char *color = NULL;
+
+    if (Node->type == OPERATION)
+        color = globalOperationFillColor;
+    
+    else if (Node->type == VARIABLE)
+        color = globalVariableFillColor;
+
+    else
+        color = globalValueFillColor;
+
+    fprintf(tmp, "    node%p [shape=box3d, style=\"filled\" fillcolor=\"%s\"," 
+            "fontname=\"Arial\", label = ",                                    
+            Node, color);
+                           
+    dataOutput(Node->type, Node->data, true, tmp);
+
+    fprintf(tmp, "]\n"); 
+
+    return;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 // Only address of current node or it's parent allow us to distinguish them.
 // So I use address for this.
 
-#define DEFINENODE(NodeParent, Node, tmp)                                              \
-    do                                                                                 \
-    {                                                                                  \
-        if (Node != NULL)                                                              \
-        {                                                                              \
-            fprintf(tmp, "    node%p [shape=box3d, style=\"filled\" fillcolor=\"%s\"," \
-                    "fontname=\"Arial\", label = ",                                    \
-                    Node, globalFillColor);                                            \
-            dataOutput(Node->type, Node->data, true, tmp);                          \
-            fprintf(tmp, "]\n");                                                       \
-            fprintf(tmp, "    node%p -> node%p\n", NodeParent, Node);                  \
-        }                                                                              \
-    }                                                                                  \
+#define DEFINENODE(Parent, Node, tmp)                             \
+    do                                                            \
+    {                                                             \
+        if (Node != NULL)                                         \
+        {                                                         \
+            outputNode(Node, tmp);                                \
+            fprintf(tmp, "    node%p -> node%p\n", Parent, Node); \
+        }                                                         \
+    }                                                             \
     while (0)
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 static void recursiveFileFiller (const node *Node, FILE *tmp)
 {
@@ -324,14 +348,9 @@ static void recursiveFileFiller (const node *Node, FILE *tmp)
 static void fillTemporaryFile (const tree *Tree, FILE *tmp)
 {
 
-    fprintf(tmp, 
-            "digraph BST\n{\n"
-            "    node%p [shape=box3d, style=\"filled\" fillcolor=\"%s\","
-            "fontname=\"Arial\", label = ",
-            Tree->root, globalFillColor);
-    
-    dataOutput(Tree->root->type, Tree->root->data, true, tmp);
-    fprintf(tmp, "]\n");
+    fprintf(tmp, "digraph BST\n{\n");
+
+    outputNode(Tree->root, tmp);
     
     recursiveFileFiller(Tree->root, tmp);
 
@@ -345,13 +364,6 @@ static void fillTemporaryFile (const tree *Tree, FILE *tmp)
 // => We need a number of current image:
 
 static int dumpNumber = 0;
-
-static void makeSourcesImages(void)
-{
-    systemf("dot ./TreeDumpSources/tmp.txt -T png -o ./TreeDumpSources/graph%d.png", dumpNumber);
-
-    return;
-}
 
 ISERROR treeDumpFunction (const tree *Tree,     const char *message,
                           const char *treename, const char *filename, 
@@ -403,7 +415,7 @@ ISERROR treeDumpFunction (const tree *Tree,     const char *message,
     fillTemporaryFile(Tree, tmp);
     fclose(tmp);
 
-    makeSourcesImages();
+    systemf("dot ./TreeDumpSources/tmp.txt -T png -o ./TreeDumpSources/graph%d.png", dumpNumber);
 
     fprintf(file, "<img src = ./TreeDumpSources/graph%d.png>\n", dumpNumber);
     dumpNumber++;

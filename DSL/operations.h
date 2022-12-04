@@ -156,8 +156,8 @@ DEFINE_OPERATION(DIV,    "/",
 
 DEFINE_OPERATION(POW,    "^",
 {
-    node *mulNode  = MULNODE;
-    mulNode->right = MULNODE; // TODO use logarithmic differentiation
+    node *mulNode  = MULNODE; // TODO make LaTEX output.
+    mulNode->right = MULNODE; // TODO use logarithmic differentiation.
 
     node *powNode = POWNODE;
     if (Node->left)
