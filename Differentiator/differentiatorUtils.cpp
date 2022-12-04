@@ -2,80 +2,17 @@
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static void copySubtree (node **destNode, const node *srcNode, size_t *subtreeSize)
+static void copySubtree (node **destNode, const node *srcNode)
 {
-    (*subtreeSize)++;
-
     *destNode = nodeConstructor(srcNode->type, srcNode->data);
 
-    if (srcNode->left)
-        copySubtree(&((*destNode)->left),  srcNode->left,  subtreeSize);
+    if (srcNode->left != NULL)
+        copySubtree(&((*destNode)->left),  srcNode->left);
 
-    if (srcNode->right)
-        copySubtree(&((*destNode)->right), srcNode->right, subtreeSize);
+    if (srcNode->right != NULL)
+        copySubtree(&((*destNode)->right), srcNode->right);
 
     return;
-}
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-static node *differentiateSubtree (const node *Node, size_t *newSize)
-{
-    switch(Node->type)
-    {
-        case OPERATION:
-            (*newSize)++;
-
-            #define DEFINE_OPERATION(name, string, ...) \
-                if (Node->data.operation == name)       \
-                    __VA_ARGS__
-            
-            #include "operations.h"
-
-            #undef DEFINE_OPERATION
-
-            break;
-
-        case VALUE:
-            (*newSize)++;
-            return nodeConstructor(VALUE, {.value = 0});
-            break;
-
-        case VARIABLE:
-            (*newSize)++;
-            return nodeConstructor(VALUE, {.value = 1});
-            break;
-
-        default:
-            PUTERROR("Unmatched type of node.");
-            return NULL;
-            break;
-    }
-
-    return NULL;
-}
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-tree *differentiateTree (const tree *Tree)
-{
-    CHECKERROR(Tree != NULL &&
-               "Can't differentiate NULL.",
-               NULL);
-
-    tree *Diff = treeConstructor;
-
-    CHECKERROR(Diff != NULL && 
-               "Can't create new tree", 
-               NULL);
-
-    size_t diffSize = 0;
-    node *diffRoot  = differentiateSubtree(Tree->root, &diffSize);
-
-    Diff->root = diffRoot;
-    Diff->size = diffSize;
-
-    return Diff;
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,18 +48,64 @@ static void replaceSubtreeWithNode (node *Node, TYPE type, data_t data)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static ISERROR solveConstants (node *Node, size_t *Size) //TODO too long function
+static node *differentiateSubtree (const node *Node)
 {
-    if (Node->left        != NULL && 
-       (Node->left->left  != NULL || 
-        Node->left->right != NULL))
-        solveConstants(Node->left, Size);
+    switch(Node->type)
+    {
+        case OPERATION:
+            #define DEFINE_OPERATION(name, string, ...) \
+                if (Node->data.operation == name)       \
+                    __VA_ARGS__
+            
+            #include "operations.h"
 
-    if (Node->right        != NULL && 
-       (Node->right->left  != NULL || 
-        Node->right->right != NULL))
-        solveConstants(Node->right, Size);
+            #undef DEFINE_OPERATION
 
+            break;
+
+        case VALUE:
+            return nodeConstructor(VALUE, {.value = 0});
+            break;
+
+        case VARIABLE:
+            return nodeConstructor(VALUE, {.value = 1});
+            break;
+
+        default:
+            PUTERROR("Unmatched type of node.");
+            return NULL;
+            break;
+    }
+
+    return NULL;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+tree *differentiateTree (const tree *Tree)
+{
+    CHECKERROR(Tree != NULL &&
+               "Can't differentiate NULL.",
+               NULL);
+
+    tree *Diff = treeConstructor;
+
+    CHECKERROR(Diff != NULL && 
+               "Can't create new tree", 
+               NULL);
+
+    node *diffRoot  = differentiateSubtree(Tree->root);
+
+    Diff->root = diffRoot;
+    countSubtreeSize(Diff->root, &(Diff->size));
+
+    return Diff;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static double solveArithmetic (node *Node)
+{
     double result = NAN;
 
     if (Node->left       != NULL  && Node->right       != NULL &&
@@ -154,11 +137,19 @@ static ISERROR solveConstants (node *Node, size_t *Size) //TODO too long functio
         }
 
         result = leftNumber; 
-
     }
 
-    else if (Node->left != NULL && 
-             Node->type == OPERATION)
+    return result;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static double solveTrigonometry (node *Node)
+{
+    double result = NAN;
+
+    if (Node->left != NULL && 
+        Node->type == OPERATION)
     {
         double argument = Node->left->data.value;
 
@@ -193,21 +184,56 @@ static ISERROR solveConstants (node *Node, size_t *Size) //TODO too long functio
         }
     }
 
+    return result;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static void fillMissingNodes (node *Node)
+{
     if (Node->type == OPERATION && 
         Node->data.operation == SUB &&
         Node->left  != NULL &&
         Node->right == NULL)
         replaceSubtreeWithNode(Node, VALUE, {.value = -1 * Node->left->data.value});
     
+    else if (Node->type == OPERATION && 
+             Node->data.operation == ADD &&
+             Node->left  != NULL &&
+             Node->right == NULL)
+        replaceSubtreeWithNode(Node, VALUE, {.value = Node->left->data.value});
+
+    return;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static void solveConstants (node *Node, size_t *Size)
+{
+    if (Node->left        != NULL && 
+       (Node->left->left  != NULL || 
+        Node->left->right != NULL))
+        solveConstants(Node->left, Size);
+
+    if (Node->right        != NULL && 
+       (Node->right->left  != NULL || 
+        Node->right->right != NULL))
+        solveConstants(Node->right, Size);
+
+    fillMissingNodes(Node);
+    
+    double result = solveArithmetic(Node);
+    if (!isfinite(result))
+        result = solveTrigonometry(Node);
 
     if (isfinite(result))
     {
-        *Size -= 2;
+        *Size -= 2; // Because two leafs are deleted.
 
         replaceSubtreeWithNode(Node, VALUE, {.value = result});
     }
 
-    return NOTERROR;
+    return;
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -277,6 +303,9 @@ ISERROR simplifyTree (tree *Tree)
 
     removeUnusedMuls(Tree->root, &(Tree->size));
     solveConstants(Tree->root,   &(Tree->size));
+
+    Tree->size = 0;
+    countSubtreeSize(Tree->root, &(Tree->size));
 
     return NOTERROR;
 }

@@ -25,8 +25,8 @@ int main (const int argc, const char *argv[])
     CHECKERROR(Diff != NULL &&
                "Error in tree differentiation.", 
                -1);
-//FIXME FIX UNARY PLUSSES SIMPLIFICATION
-//FIXME MISHA'S BUG
+
+    //FIXME MISHA'S BUG
 
     DOTHIS(treeDestructor(Tree));
 
