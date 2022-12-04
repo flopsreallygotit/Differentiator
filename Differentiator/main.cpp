@@ -26,8 +26,6 @@ int main (const int argc, const char *argv[])
                "Error in tree differentiation.", 
                -1);
 
-    //FIXME MISHA'S BUG
-
     DOTHIS(treeDestructor(Tree));
 
     DOTHIS(treeDump(Diff, "Dump of differentiated tree.", output));

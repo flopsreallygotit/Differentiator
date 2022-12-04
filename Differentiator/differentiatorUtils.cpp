@@ -208,17 +208,17 @@ static void fillMissingNodes (node *Node)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static void solveConstants (node *Node, size_t *Size)
+static void solveConstants (node *Node)
 {
     if (Node->left        != NULL && 
        (Node->left->left  != NULL || 
         Node->left->right != NULL))
-        solveConstants(Node->left, Size);
+        solveConstants(Node->left);
 
     if (Node->right        != NULL && 
        (Node->right->left  != NULL || 
         Node->right->right != NULL))
-        solveConstants(Node->right, Size);
+        solveConstants(Node->right);
 
     fillMissingNodes(Node);
     
@@ -227,11 +227,7 @@ static void solveConstants (node *Node, size_t *Size)
         result = solveTrigonometry(Node);
 
     if (isfinite(result))
-    {
-        *Size -= 2; // Because two leafs are deleted.
-
         replaceSubtreeWithNode(Node, VALUE, {.value = result});
-    }
 
     return;
 }
@@ -239,7 +235,6 @@ static void solveConstants (node *Node, size_t *Size)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #define TRANSPORTNODE(newNode)          \
-    *Size -= 2;                         \
     node *pointerToNode = newNode;      \
     Node->data  = pointerToNode->data;  \
     Node->type  = pointerToNode->type;  \
@@ -247,13 +242,13 @@ static void solveConstants (node *Node, size_t *Size)
     Node->right = pointerToNode->right; \
     free(pointerToNode);
 
-static ISERROR removeUnusedMuls (node *Node, size_t *Size)
+static ISERROR removeUnusedMuls (node *Node)
 {
     if (Node->left != NULL)
-        removeUnusedMuls(Node->left,  Size);
+        removeUnusedMuls(Node->left);
 
     if (Node->right != NULL)
-        removeUnusedMuls(Node->right, Size);
+        removeUnusedMuls(Node->right);
 
     if (Node->type == OPERATION &&
         Node->data.operation == MUL)
@@ -269,15 +264,7 @@ static ISERROR removeUnusedMuls (node *Node, size_t *Size)
 
         if ((isfinite(leftNumber)  && differenceSign(leftNumber,  0) == 0) ||
             (isfinite(rightNumber) && differenceSign(rightNumber, 0) == 0))
-        {
-            size_t subtreeSize = 0;
-            countSubtreeSize(Node, &subtreeSize);
-            
-            subtreeSize--;
-            *Size -= subtreeSize;
-
             replaceSubtreeWithNode(Node, VALUE, {.value = 0});
-        }
 
         else if (isfinite(leftNumber) && differenceSign(leftNumber, 1) == 0)
         {
@@ -301,8 +288,8 @@ ISERROR simplifyTree (tree *Tree)
                "Can't simplify null.",
                NULLPOINTER);
 
-    removeUnusedMuls(Tree->root, &(Tree->size));
-    solveConstants(Tree->root,   &(Tree->size));
+    removeUnusedMuls(Tree->root);
+    solveConstants(Tree->root);
 
     Tree->size = 0;
     countSubtreeSize(Tree->root, &(Tree->size));
