@@ -21,6 +21,11 @@ int main (const int argc, const char *argv[])
     DOTHIS(simplifyTree(Tree));
     DOTHIS(treeDump(Tree, "Dump of tree after simplifier.", output));
 
+    latex *Latex = latexConstructor("LaTEX/phrases.txt", "Differentiator.tex");
+    CHECKERROR(Latex != NULL &&
+               "Can't create latex struct.",
+               -1);
+
     tree *Diff = differentiateTree(Tree);
     CHECKERROR(Diff != NULL &&
                "Error in tree differentiation.", 
@@ -30,10 +35,13 @@ int main (const int argc, const char *argv[])
 
     DOTHIS(treeDump(Diff, "Dump of differentiated tree.", output));
     DOTHIS(simplifyTree(Diff));
-    DOTHIS(treeDump(Diff, "Dump of differentiated tree after simplifier.", output));
-    DOTHIS(treeDestructor(Diff));
+    DOTHIS(treeDump(Diff, "Dump of differentiated tree after simplifier.", output)); 
 
     fclose(output);
+
+    latexDestructor(Latex);
+
+    DOTHIS(treeDestructor(Diff));
 
     return 0;
 }

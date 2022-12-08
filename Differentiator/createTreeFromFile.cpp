@@ -7,26 +7,26 @@
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static void checkWrongMinuses (node *Node)
-{
-    if (Node->type == OPERATION && Node->data.operation == SUB &&               // Current node is SUB
-        Node->right != NULL &&                                                  // Right node exists
-        Node->right->type == OPERATION && Node->right->data.operation == SUB && // Right node is SUB
-        Node->right->left != NULL &&                                            // Left node of right node exists.
-        Node->right->left->type == VALUE)                                       // Left node of right node is value.
-    {
-        Node->data = {.operation = ADD};
-        Node->right->left->data = {.value = -1 * Node->right->left->data.value};
-    }
+// static void checkWrongMinuses (node *Node)
+// {
+//     if (Node->type == OPERATION && Node->data.operation == SUB &&               // Current node is SUB
+//         Node->right != NULL &&                                                  // Right node exists
+//         Node->right->type == OPERATION && Node->right->data.operation == SUB && // Right node is SUB
+//         Node->right->left != NULL &&                                            // Left node of right node exists.
+//         Node->right->left->type == VALUE)                                       // Left node of right node is value.
+//     {
+//         Node->data = {.operation = ADD};
+//         Node->right->left->data = {.value = -1 * Node->right->left->data.value};
+//     }
 
-    if (Node->left != NULL)
-        checkWrongMinuses(Node->left);
+//     if (Node->left != NULL)
+//         checkWrongMinuses(Node->left);
 
-    if (Node->right != NULL)
-        checkWrongMinuses(Node->right);
+//     if (Node->right != NULL)
+//         checkWrongMinuses(Node->right);
 
-    return;
-}
+//     return;
+// }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -401,7 +401,7 @@ tree *parseFile (const char *filename)
         return NULL;
     }
 
-    checkWrongMinuses(Tree->root);
+    // checkWrongMinuses(Tree->root);
 
     return Tree;
 }

@@ -1,70 +1,148 @@
 #include <stdlib.h>
-#include <stdio.h>
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 #include <sys/stat.h>
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#include "universalUtils.h"
+#include "latexUtils.h"
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static ISERROR createBuffer (FILE *file, char **buffer)
+static void getSymbolsCount (latex *Latex)
 {
-    size_t size = 0;
-
     struct stat fileStatBuffer;
-    fstat(fileno(file), &fileStatBuffer);
-    size = fileStatBuffer.st_size;
+    fstat(fileno(Latex->input), &fileStatBuffer);
+    Latex->symbolsCount = fileStatBuffer.st_size;
 
-    *buffer = (char *) calloc (size + 1, sizeof(char));
+    return;
+}
 
-    CHECKERROR(*buffer != NULL &&
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static void getLineCount (latex *Latex)
+{
+    for (size_t buffer_idx = 0; Latex->buffer[buffer_idx] != '\0'; buffer_idx++)
+        if (Latex->buffer[buffer_idx] == '\n')
+            Latex->lineCount++;
+
+    return;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static ISERROR createBuffer (latex *Latex)
+{
+    getSymbolsCount(Latex);
+
+    Latex->buffer = (char *) calloc (Latex->symbolsCount + 1, sizeof(char));
+
+    CHECKERROR(Latex->buffer != NULL &&
                "Can't allocate memory for buffer.",
                ALLOCATIONERROR);
 
-    fread(*buffer, sizeof(char), size, file);
+    fread(Latex->buffer, sizeof(char), Latex->symbolsCount, Latex->input);
 
     return NOTERROR;
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static size_t getLineCount (const char *buffer)
+static ISERROR makePhrases(latex *Latex)
 {
-    size_t lineCount = 0;
+    getLineCount(Latex);
 
-    for (size_t buffer_idx = 0; buffer[buffer_idx] != '\0'; buffer_idx++)
-        if (buffer[buffer_idx] == '\n')
-            lineCount++;
+    Latex->phrases = (char **) calloc (Latex->symbolsCount, sizeof(char));
 
-    return lineCount;
+    CHECKERROR(Latex->phrases != NULL &&
+               "Can't allocate memory for phrases array.",
+               ALLOCATIONERROR);
+
+    size_t phrase_idx = 0;
+    bool isNewString  = true;
+
+    for (size_t buffer_idx = 0; Latex->buffer[buffer_idx] != '\0'; buffer_idx++)
+    {
+        if (isNewString)
+        {
+            Latex->phrases[phrase_idx] = Latex->buffer + buffer_idx;
+            phrase_idx++;
+
+            isNewString = false;
+        }
+
+        if (Latex->buffer[buffer_idx] == '\n')
+            isNewString = true;
+    }
+
+    return NOTERROR;
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+latex *latexConstructor (const char *input, const char *output)
+{
+    CHECKERROR(input != NULL &&
+               "Can't create latex struct with null input.",
+               NULL);
 
+    CHECKERROR(input != NULL &&
+               "Can't create latex struct with null output.",
+               NULL);
+
+    latex *Latex = (latex *) calloc (1, sizeof(latex));
+
+    CHECKERROR(Latex != NULL &&
+               "Can't allocate memory for latex struct.",
+               NULL);
+
+    Latex->input  = fopen(input,  "r");
+    Latex->output = fopen(output, "w+");
+
+    CHECKERROR(createBuffer(Latex) == NOTERROR &&
+               "Can't create buffer for latex struct.", 
+               NULL);
+
+    CHECKERROR(makePhrases(Latex) == NOTERROR &&
+               "Can't make phrases for latex struct.", 
+               NULL);
+
+    return Latex;
+}
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static ISERROR parseFile (const char *filename, size_t *lineCount)
+void latexDestructor (latex *Latex)
 {
-    FILE *file = fopen(filename, "r");
+    if (Latex == NULL)
+        return;
 
-    CHECKERROR(file != NULL &&
-               "Can't open file.",
-               ALLOCATIONERROR);
+    fclose(Latex->input);
+    fclose(Latex->output);
 
-    char *buffer = NULL;
-    CHECKERROR(createBuffer(file, &buffer) == NOTERROR && 
-               "Can't create buffer.", 
-               ERROR);
+    free(Latex->buffer);
+    free(Latex->phrases);
 
-    char *phrases = 
-    phrases[0] = buffer;
+    Latex->buffer  = NULL;
+    Latex->phrases = NULL;
 
+    Latex->symbolsCount = 0;
+    Latex->lineCount    = 0;
+
+    free(Latex);
+    Latex = NULL;
+
+    return;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ISERROR printRandomPhrase (latex *Latex)
+{
+    size_t phrase_idx = rand() % Latex->lineCount;
+
+    for (size_t symbol_idx = 0; Latex->phrases[phrase_idx][symbol_idx] != '\n'; symbol_idx++)
+        putc(Latex->phrases[phrase_idx][symbol_idx], Latex->output);
+
+    putc('\n', Latex->output);
 
     return NOTERROR;
 }

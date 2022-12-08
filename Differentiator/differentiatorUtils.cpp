@@ -148,8 +148,9 @@ static double solveTrigonometry (node *Node)
 {
     double result = NAN;
 
-    if (Node->left != NULL && 
-        Node->type == OPERATION)
+    if (Node->type == OPERATION &&
+        Node->left != NULL      && 
+        Node->left->type == VALUE)
     {
         double argument = Node->left->data.value;
 
@@ -266,17 +267,49 @@ static ISERROR removeUnusedMuls (node *Node)
             (isfinite(rightNumber) && differenceSign(rightNumber, 0) == 0))
             replaceSubtreeWithNode(Node, VALUE, {.value = 0});
 
-        else if (isfinite(leftNumber) && differenceSign(leftNumber, 1) == 0)
+        else if (isfinite(leftNumber) && differenceSign(leftNumber,   1) == 0)
         {
+            nodeDestructor(Node->left);    
             TRANSPORTNODE(Node->right);
         }
 
         else if (isfinite(rightNumber) && differenceSign(rightNumber, 1) == 0)
         {
+            nodeDestructor(Node->right);    
             TRANSPORTNODE(Node->left);
         }
     }
     
+    return NOTERROR;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static ISERROR removeUnusedPows (node *Node)
+{
+    if (Node->left != NULL)
+        removeUnusedPows(Node->left);
+
+    if (Node->right != NULL)
+        removeUnusedPows(Node->right);
+
+    if (Node->type == OPERATION &&
+        Node->data.operation == POW)
+    {
+        if (Node->right != NULL &&                                   
+            Node->right->type == VALUE)                              
+        {                                                          
+            if (differenceSign(Node->right->data.value, 0) == 0)     
+                replaceSubtreeWithNode(Node, VALUE, {.value = 1}); 
+
+            if (differenceSign(Node->right->data.value, 1) == 0)     
+            {
+                nodeDestructor(Node->right);                                                
+                TRANSPORTNODE(Node->left);                          
+            }                                                      
+        }
+    }
+
     return NOTERROR;
 }
 
@@ -289,10 +322,17 @@ ISERROR simplifyTree (tree *Tree)
                NULLPOINTER);
 
     removeUnusedMuls(Tree->root);
+    removeUnusedPows(Tree->root);
     solveConstants(Tree->root);
 
-    Tree->size = 0;
-    countSubtreeSize(Tree->root, &(Tree->size));
+    size_t Size = 0;
+    countSubtreeSize(Tree->root, &(Size));
+
+    if (Size != Tree->size)
+    {
+        Tree->size = Size;
+        return simplifyTree(Tree);
+    }
 
     return NOTERROR;
 }

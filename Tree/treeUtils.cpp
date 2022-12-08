@@ -270,7 +270,7 @@ static ISERROR simpleTreeDumpFunction (const tree *Tree, const char *treename, c
             HTMLBOLD "Tree %s[%p] " HTMLBOLDRESET, 
             filename, line, function, treename, Tree);
 
-    fprintf(file, "{\n\n    Size: %lu\n", Tree->size);
+    fprintf(file, "\n{\n    Size: %lu\n", Tree->size);
 
     putc('\n', file);
 
